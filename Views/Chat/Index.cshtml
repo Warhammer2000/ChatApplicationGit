@@ -1,0 +1,199 @@
+﻿@model ChatViewModel
+@{
+    var userEmail = User.Identity.Name;
+    var receiverId = Model.ReceiverId;
+    var userEmailsJson = Newtonsoft.Json.JsonConvert.SerializeObject(Model.UserEmails);
+}
+
+<div class="chat-container p-3 rounded shadow-lg bg-light" id="chatContainer">
+    <ul id="messageList" class="list-unstyled">
+        @foreach (var message in Model.Messages)
+        {
+            var senderEmail = Model.UserEmails.ContainsKey(message.Sender) ? Model.UserEmails[message.Sender] : "Неизвестный";
+            var isSender = senderEmail == userEmail;
+            <li class="mb-3" id="message-@message.Id">
+                <div class="message card @(isSender ? "bg-primary text-white" : "bg-light text-dark") shadow-sm">
+                    <div class="card-body">
+                        <div class="message-content">
+                            <h6 class="card-title mb-1">@message.UserEmail</h6>
+                            <p class="card-text small">@message.Timestamp</p>
+                            <p class="message-text">@message.Text</p>
+                            @if (!string.IsNullOrEmpty(message.FilePath))
+                            {
+                                var fileExtension = ChatApplication.Helpers.FileHelper.GetFileExtension(message.FilePath).ToLower();
+                                var imageExtensions = new List<string> { ".jpg", ".jpeg", ".png", ".gif" };
+                                var videoExtensions = new List<string> { ".mp4", ".webm", ".ogg" };
+
+                                if (imageExtensions.Contains(fileExtension))
+                                {
+                                    var filePath = message.FilePath.StartsWith("/") ? "~" + message.FilePath : "~/" + message.FilePath;
+                                    <img src="@Url.Content(filePath)" alt="Изображение" class="img-fluid mt-2 rounded" style="max-width: 200px; max-height: 200px;" />
+                                }
+                                else if (videoExtensions.Contains(fileExtension))
+                                {
+                                    <video controls class="mt-2 rounded" style="max-width: 400px; max-height: 300px;">
+                                        <source src="@Url.Content("~/" + message.FilePath)" type="video/@fileExtension.TrimStart('.')">
+                                        Ваш браузер не поддерживает видео.
+                                    </video>
+                                }
+                                else
+                                {
+                                    var filePath = message.FilePath.StartsWith("/") ? "~" + message.FilePath : "~/" + message.FilePath;
+                                    <a href="@Url.Content(filePath)" target="_blank" class="text-decoration-none">@ChatApplication.Helpers.FileHelper.GetFileName(message.FilePath)</a>
+                                }
+                            }
+                        </div>
+                        @if (isSender)
+                        {
+                            <div class="message-actions mt-2">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('editMessageForm-@message.Id').style.display='block'">
+                                    <i class="bi bi-pencil"></i> Редактировать
+                                </button>
+                                <form asp-action="DeleteMessage" method="post" style="display:inline;">
+                                    <input type="hidden" name="messageId" value="@message.Id" />
+                                    <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </button>
+                                </form>
+                                <div id="editMessageForm-@message.Id" style="display:none;">
+                                    <form asp-action="EditMessage" method="post" class="d-flex align-items-center">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
+                                        <input type="text" name="newText" class="form-control form-control-sm me-2" value="@message.Text" required />
+                                        <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
+                                        <button type="button" onclick="document.getElementById('editMessageForm-@message.Id').style.display='none'" class="btn btn-secondary btn-sm ms-2">Отменить</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+</div>
+
+<form asp-action="SendMessage" method="post" class="d-flex mb-2">
+    <input type="hidden" id="receiverId" name="receiverId" value="@Model.ReceiverId" />
+    <input type="text" id="messageText" name="text" class="form-control me-2" placeholder="Введите сообщение" required />
+    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Отправить</button>
+</form>
+
+<form asp-action="SendFile" method="post" enctype="multipart/form-data" class="d-flex">
+    <input type="hidden" name="receiverId" value="@Model.ReceiverId" />
+    <input type="hidden" name="senderId" value="@User.Identity.Name" />
+    <input type="file" name="file" class="form-control-file me-2" required />
+    <button type="submit" class="btn btn-primary"><i class="bi bi-file-earmark-arrow-up"></i> Отправить файл</button>
+</form>
+
+<!-- Кнопка видеозвонка -->
+<!-- Кнопка для перехода на видеозвонок -->
+<div class="mt-4 text-center">
+    <a href="@Url.Action("VideoCall", "Chat", new { receiverId = Model.ReceiverId })" class="btn btn-video-call">
+        <i class="bi bi-camera-video"></i> Начать видеозвонок
+    </a>
+</div>
+
+
+<!-- Подключение Bootstrap и MDB -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css" />
+
+<style>
+    body {
+        background-color: #f5f5f5;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .chat-container {
+        max-height: 600px;
+        overflow-y: auto;
+        border-radius: 12px;
+        padding: 20px;
+        background: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .message {
+        max-width: 70%;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+
+        .message.sent {
+            background-color: #2196f3;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.received {
+            background-color: #f1f1f1;
+            color: black;
+            margin-right: auto;
+        }
+
+    .form-control {
+        border-radius: 8px;
+    }
+
+    .btn-primary {
+        border-radius: 8px;
+        background-color: #2196f3;
+        border: none;
+    }
+
+    .btn-warning, .btn-danger {
+        border-radius: 8px;
+    }
+
+    .btn-floating {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000; /* Убедитесь, что кнопка отображается поверх других элементов */
+    }
+
+        .btn-floating i {
+            font-size: 24px;
+        }
+
+        .btn-floating:hover {
+            background-color: #dc3545;
+        }
+
+    footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #7e57c2; /* Можно выбрать другой цвет */
+        color: white;
+        text-align: center;
+        padding: 10px 0;
+        z-index: 999; /* Убедитесь, что футер не перекрывает кнопку */
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.18/signalr.min.js"></script>
+<script>
+    const userEmail = "@userEmail";
+    const receiverId = "@receiverId";
+    const userEmails = @Html.Raw(userEmailsJson);
+
+    // Переход на страницу видеозвонка при нажатии на кнопку
+    document.getElementById('videoCallButton').addEventListener('click', () => {
+        window.location.href = '@Url.Action("VideoCall", "Chat")';
+    });
+</script>
+<script src="~/js/chatScroll.js"></script>
+<script src="~/js/chatConnection.js"></script>
+<script src="~/js/messageHandling.js"></script>
+<script src="~/js/fileHandling.js"></script>

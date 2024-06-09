@@ -1,0 +1,164 @@
+﻿@model List<ChatApplication.Models.ContactViewModel>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contacts - ChatApplication</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #E3F2FD, #90CAF9);
+            color: #333;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #6200ea;
+            color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                margin-right: 15px;
+                transition: color 0.3s;
+            }
+
+                nav a:hover {
+                    color: #BB86FC;
+                }
+
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .contacts-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .list-group-item {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            color: #333;
+            transition: background 0.3s, box-shadow 0.3s;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+
+            .list-group-item:hover {
+                background: #e0f7fa;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            }
+
+            .list-group-item a {
+                color: #007bff;
+                text-decoration: none;
+                transition: color 0.3s;
+                font-weight: 500;
+            }
+
+                .list-group-item a:hover {
+                    color: #0056b3;
+                }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 15px;
+            transition: background-color 0.3s;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        footer {
+            background: #6200ea;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+            footer a {
+                color: #BB86FC;
+                text-decoration: none;
+                margin-left: 10px;
+                transition: color 0.3s;
+            }
+
+                footer a:hover {
+                    color: #fff;
+                }
+    </style>
+</head>
+<body>
+   
+    <div class="container">
+        <div class="contacts-card">
+            <h2 class="mb-4 text-center">Контакты</h2>
+            <ul class="list-group list-group-flush">
+                @foreach (var contact in Model)
+                {
+                    <li class="list-group-item">
+                        <a href="@Url.Action("Index", "Chat", new { receiverId = contact.ContactUserId })">
+                            @contact.ContactUserEmail
+                        </a>
+                        @if (contact.IsFavorite)
+                        {
+                            <span class="text-warning">⭐</span>
+                        }
+                    </li>
+                }
+            </ul>
+
+            <div class="text-center mt-4">
+                <a href="@Url.Action("AddContact", "Contact")" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Добавить контакт
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Подключение Bootstrap и Bootstrap Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

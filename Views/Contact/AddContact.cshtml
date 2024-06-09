@@ -1,0 +1,214 @@
+﻿@model ChatApplication.Models.ContactViewModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Contact - ChatApplication</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #E3F2FD, #90CAF9);
+            color: #333;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            color: #333;
+            padding: 10px 15px;
+            transition: background 0.3s, border 0.3s;
+        }
+
+            .form-control:focus {
+                background: #fff;
+                border-color: #007bff;
+                box-shadow: none;
+            }
+
+        .input-group-text {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 15px 0 0 15px;
+            color: #333;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            border-radius: 15px;
+            transition: background-color 0.3s;
+        }
+
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+
+        .btn i {
+            margin-right: 10px;
+        }
+
+        .alert-danger {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            color: #f8f9fa;
+        }
+
+            .alert-danger p {
+                margin: 0;
+            }
+
+        nav {
+            background: #6200ea;
+            color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                margin-right: 15px;
+                transition: color 0.3s;
+            }
+
+                nav a:hover {
+                    color: #BB86FC;
+                }
+
+        footer {
+            background: #6200ea;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+        }
+
+            footer a {
+                color: #BB86FC;
+                text-decoration: none;
+                margin-left: 10px;
+                transition: color 0.3s;
+            }
+
+                footer a:hover {
+                    color: #fff;
+                }
+    </style>
+</head>
+<body>
+ 
+
+    <div class="container d-flex justify-content-center align-items-center">
+        <div class="card p-4 shadow-lg rounded">
+            <h2 class="mb-4 text-center">Add Contact</h2>
+            <form asp-action="AddContact" method="post" class="needs-validation" novalidate>
+                <div class="form-group mb-4">
+                    <label asp-for="ContactUserEmail" class="form-label">Email:</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="ContactUserEmail" class="form-control" placeholder="Введите email" required />
+                    </div>
+                    <span asp-validation-for="ContactUserEmail" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Name" class="form-label">Name:</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input asp-for="Name" class="form-control" placeholder="Введите имя" required />
+                    </div>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="PhoneNumber" class="form-label">Phone Number:</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="Введите номер телефона" required />
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-person-plus"></i> Add Contact</button>
+            </form>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mt-4">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p>@error.ErrorMessage</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 - ChatApplication - <a href="@Url.Action("Privacy", "Home")">Privacy</a>
+    </footer>
+
+    <!-- Подключение Bootstrap и Bootstrap Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <!-- Подключение MDB (Material Design Bootstrap) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js"></script>
+
+    <script>
+        // Добавляем клиентскую проверку формы с использованием Bootstrap
+        (function () {
+            'use strict'
+
+            // Получаем все формы, которые мы хотим применить пользовательский стиль Bootstrap к валидации
+            var forms = document.querySelectorAll('.needs-validation')
+
+            // Проходим по каждой форме и предотвращаем её отправку, если она не валидна
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html>

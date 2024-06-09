@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Video Call - ChatApplication</title>
+	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" />
+	<style>
+		body {
+			background: linear-gradient(135deg, #E3F2FD, #90CAF9);
+			color: #333;
+			font-family: 'Roboto', sans-serif;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+		}
+
+		.navbar {
+			background-color: #6a0dad;
+			color: #fff;
+			padding: 1rem;
+			width: 100%;
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 1000;
+		}
+
+			.navbar a {
+				color: #fff;
+				text-decoration: none;
+				margin: 0 10px;
+			}
+
+				.navbar a:hover {
+					text-decoration: underline;
+				}
+
+		.content {
+			flex: 1;
+			padding-top: 70px; /* Отступ, чтобы не перекрываться с навигационной панелью */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			flex-direction: column;
+		}
+
+		.footer {
+			background-color: #6a0dad;
+			color: #fff;
+			padding: 1rem;
+			width: 100%;
+			text-align: center;
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			z-index: 1000;
+		}
+
+		.card {
+			background: #fff;
+			border-radius: 15px;
+			padding: 20px;
+			width: 80%;
+			max-width: 800px;
+			box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+			margin: 10px;
+		}
+
+		.btn-primary {
+			background-color: #0d6efd;
+			border: none;
+			border-radius: 15px;
+			transition: background-color 0.3s;
+		}
+
+			.btn-primary:hover {
+				background-color: #0056b3;
+			}
+
+		.btn i {
+			margin-right: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div class="navbar">
+		<a href="@Url.Action("Index", "Home")">ChatApplication</a>
+		<a href="@Url.Action("Privacy", "Home")">Privacy</a>
+		<a href="@Url.Action("Index", "AddressBook")">Address Book</a>
+		<a href="@Url.Action("Index", "Contact")">Contacts</a>
+		@if (User.Identity.IsAuthenticated)
+		{
+			<a href="@Url.Action("Logout", "Account")">Logout</a>
+			<span>@User.Identity.Name</span>
+		}
+		else
+		{
+			<a href="@Url.Action("Login", "Account")">Login</a>
+			<a href="@Url.Action("Register", "Account")">Register</a>
+		}
+	</div>
+
+	<div class="content">
+		<h2 class="text-center mb-4">Видеозвонок</h2>
+		<div class="card">
+			<h3 class="h5 mb-3">Экран пользователя 1</h3>
+			<video id="localVideo" class="w-100" autoplay muted></video>
+		</div>
+		<div class="card">
+			<h3 class="h5 mb-3">Экран пользователя 2</h3>
+			<video id="remoteVideo" class="w-100" autoplay></video>
+		</div>
+		<div class="text-center mt-4">
+			<button id="startCallButton" class="btn btn-primary mb-3">
+				<i class="bi bi-camera-video"></i> Начать звонок
+			</button>
+			<button id="endCallButton" class="btn btn-danger mb-3" style="display: none;">
+				<i class="bi bi-camera-video-off"></i> Завершить звонок
+			</button>
+		</div>
+	</div>
+
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.18/signalr.min.js"></script>
+	<script>
+		const receiverId = '@ViewBag.ReceiverId';
+
+		if (!receiverId) {
+			alert("Receiver ID is not defined. Please check the source of the receiver ID.");
+		}
+
+		const connection = new signalR.HubConnectionBuilder()
+			.withUrl("/chatHub")
+			.configureLogging(signalR.LogLevel.Information)
+			.build();
+
+		let localStream;
+		let remoteStream;
+		let peerConnection;
+		const servers = {
+			iceServers: [
+				{
+					urls: 'stun:stun.l.google.com:19302'
+				}
+			]
+		};
+
+		async function init() {
+			try {
+				localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+				document.getElementById("localVideo").srcObject = localStream;
+
+				remoteStream = new MediaStream();
+				document.getElementById("remoteVideo").srcObject = remoteStream;
+
+				peerConnection = new RTCPeerConnection(servers);
+				localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+				peerConnection.ontrack = event => {
+					event.streams[0].getTracks().forEach(track => {
+						remoteStream.addTrack(track);
+					});
+				};
+
+				peerConnection.onicecandidate = event => {
+					if (event.candidate) {
+						connection.invoke("SendSignal", receiverId, JSON.stringify(event.candidate));
+					}
+				};
+
+				connection.on("ReceiveSignal", async (signal) => {
+					const parsedSignal = JSON.parse(signal);
+					if (parsedSignal.type === 'offer') {
+						await peerConnection.setRemoteDescription(new RTCSessionDescription(parsedSignal));
+						const answer = await peerConnection.createAnswer();
+						await peerConnection.setLocalDescription(answer);
+						connection.invoke("SendSignal", receiverId, JSON.stringify(answer));
+					} else if (parsedSignal.type === 'answer') {
+						await peerConnection.setRemoteDescription(new RTCSessionDescription(parsedSignal));
+					} else if (parsedSignal.candidate) {
+						await peerConnection.addIceCandidate(new RTCIceCandidate(parsedSignal.candidate));
+					}
+				});
+
+				connection.on("ReceiveCall", async (callerId) => {
+					const offer = await peerConnection.createOffer();
+					await peerConnection.setLocalDescription(offer);
+					connection.invoke("SendSignal", callerId, JSON.stringify(offer));
+				});
+
+				await connection.start();
+				console.log("SignalR Connected.");
+
+			} catch (err) {
+				console.error("Could not start video source: ", err.name, err.message);
+				alert(`Не удалось получить доступ к камере и микрофону. Проверьте настройки безопасности браузера и разрешите доступ. Ошибка: ${err.message}`);
+			}
+		}
+
+		document.getElementById("startCallButton").addEventListener("click", () => {
+			const receiverId = document.getElementById("receiverId").value;
+			connection.invoke("StartCall", receiverId)
+				.then(() => console.log("Call started successfully"))
+				.catch(err => console.error("Error starting call: ", err.toString()));
+		});
+
+
+		document.getElementById("endCallButton").addEventListener("click", () => {
+			peerConnection.close();
+			document.getElementById("startCallButton").style.display = "inline";
+			document.getElementById("endCallButton").style.display = "none";
+		});
+
+		init();
+	</script>
+</body>
+</html>

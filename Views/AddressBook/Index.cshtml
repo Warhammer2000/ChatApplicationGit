@@ -1,0 +1,163 @@
+﻿@model List<ChatApplication.Models.ContactViewModel>
+
+<h2 class="mb-4 text-center">Адресная книга</h2>
+
+<!-- Форма поиска -->
+<form method="get" action="@Url.Action("Index")" class="mb-4">
+	<div class="input-group shadow-sm">
+		<input type="text" name="search" class="form-control" placeholder="Поиск..." />
+		<button type="submit" class="btn btn-primary">
+			<i class="bi bi-search"></i> Поиск
+		</button>
+	</div>
+</form>
+
+<!-- Таблица контактов -->
+<div class="table-responsive mb-4 shadow-sm rounded">
+	<table class="table table-hover align-middle mb-0">
+		<thead class="bg-primary text-white text-uppercase">
+			<tr>
+				<th class="text-center">Имя</th>
+				<th class="text-center">Телефон</th>
+				<th class="text-center">Избранное</th>
+				<th class="text-center">Действия</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var contact in Model)
+			{
+				<tr>
+					<td class="text-center">@contact.Name</td>
+					<td class="text-center">@contact.PhoneNumber</td>
+					<td class="text-center">
+						@if (contact.IsFavorite)
+						{
+							<span class="text-warning"><i class="bi bi-star-fill"></i></span>
+						}
+						else
+						{
+							<span class="text-muted"><i class="bi bi-star"></i></span>
+						}
+					</td>
+					<td class="text-center">
+						<form asp-action="ToggleFavorite" method="post" class="d-inline">
+							<input type="hidden" name="id" value="@contact.ContactUserId" />
+							<button type="submit" class="btn btn-warning btn-sm">
+								@if (contact.IsFavorite)
+								{
+									<i class="bi bi-star-half">Убрать</i>
+
+								}
+								else
+								{
+									<i class="bi bi-star">   Добавить</i>
+
+								}
+							</button>
+						</form>
+						<form asp-action="Delete" method="post" class="d-inline">
+							<input type="hidden" name="id" value="@contact.ContactUserId" />
+							<button type="submit" class="btn btn-danger btn-sm">
+								<i class="bi bi-trash"></i> Удалить
+							</button>
+						</form>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+
+<!-- Форма добавления контакта -->
+<div class="card p-4 shadow-sm rounded">
+	<form asp-action="AddContact" method="post">
+		<input type="hidden" name="ContactUserId" value="" id="ContactUserId" />
+		<div class="mb-3">
+			<label for="ContactUserEmail" class="form-label">Email:</label>
+			<div class="input-group">
+				<span class="input-group-text"><i class="bi bi-envelope"></i></span>
+				<input type="email" class="form-control" name="ContactUserEmail" id="ContactUserEmail" placeholder="Введите email" required />
+			</div>
+		</div>
+		<div class="mb-3">
+			<label for="Name" class="form-label">Имя:</label>
+			<div class="input-group">
+				<span class="input-group-text"><i class="bi bi-person"></i></span>
+				<input type="text" class="form-control" name="Name" id="Name" placeholder="Введите имя" required />
+			</div>
+		</div>
+		<div class="mb-3">
+			<label for="PhoneNumber" class="form-label">Номер телефона:</label>
+			<div class="input-group">
+				<span class="input-group-text"><i class="bi bi-telephone"></i></span>
+				<input type="text" class="form-control" name="PhoneNumber" id="PhoneNumber" placeholder="Введите номер телефона" required />
+			</div>
+		</div>
+		<button type="submit" class="btn btn-primary w-100">
+			<i class="bi bi-person-plus"></i> Добавить контакт
+		</button>
+	</form>
+</div>
+
+<!-- Подключение Bootstrap Icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+<style>
+	body {
+		background-color: #fafafa;
+		color: #333;
+		font-family: 'Roboto', sans-serif;
+	}
+
+	h2 {
+		font-weight: bold;
+		color: #6200ea;
+	}
+
+	.input-group {
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.btn-primary {
+		background-color: #6200ea;
+		border: none;
+	}
+
+	.btn-warning {
+		background-color: #ffca28;
+		border: none;
+	}
+
+	.btn-danger {
+		background-color: #e53935;
+		border: none;
+	}
+
+	.btn:hover {
+		transform: scale(1.05);
+		transition: transform 0.2s;
+	}
+
+	.table-hover tbody tr:hover {
+		background-color: #f1f1f1;
+	}
+
+	.table-responsive {
+		border-radius: 8px;
+	}
+
+	.card {
+		border-radius: 12px;
+		background: #fff;
+	}
+
+	.form-control {
+		border-radius: 8px;
+	}
+
+	.input-group-text {
+		background-color: #6200ea;
+		color: #fff;
+	}
+</style>
